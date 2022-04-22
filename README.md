@@ -1,2 +1,0 @@
-
-# Projeto Academy Semantix
