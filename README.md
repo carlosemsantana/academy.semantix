@@ -15,13 +15,16 @@ Objetivo deste documento é um treinamento acadêmico; desenvolver alguns exerc�
 Para executar os próximos exemplos, você precisará baixar e instalar alguns "contâniners" docker em sua máquina. Estou estudando a partir de um cluster de Big Data disponibilizado no curso de Engenharia de Dados na Semantix Academy e o meu ambiente é Linux.
 
 
+* Noções de programação em Python 
 * Docker instalado e configurado;
 * Cluster de testes instalado;<br>
 ```$ git clone https://github.com/rodrigo-reboucas/docker-bigdata.git ```
 * Noções básicas de HDFS;<br>
 [https://github.com/carlosemsantana/docker-namenode-hdfs](<https://github.com/carlosemsantana/docker-namenode-hdfs>)
 * Noções básicas do Hive;<br>
-[https://github.com/carlosemsantana/docker-hive-server](<https://github.com/carlosemsantana/docker-hive-server>)
+[https://github.com/carlosemsantana/docker-hive-server](<https://github.com/carlosemsantana/docker-hive-server>)<br>
+* Noções básicas do Spark;<br>
+[https://spark.apache.org/](<https://spark.apache.org/>)
 
 
 ### Fonte de dados 
@@ -188,13 +191,72 @@ LOAD DATA INPATH '/user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2021_Parte2_06ju
 ```
 <!-- #endregion -->
 
+**Explorando os dados carregados no Hive**
+
+
 **Observação:** Caso na carga dos dados ocorra algum erro, a fonte de dados deverá ser enviada novamente para o HDFS, porque no processo de carga os arquivos são movidos fisicamente do hdfs.
 
 
-### Explorando os dados carregados no Hive
-
-
 ![](img/select.png)
+
+
+**3. Criar as 3 vizualizações pelo Spark com os dados enviados para o HDFS**
+
+
+Para criar as visualizações, precisamos enviar novamente os dados para o HDFS, porque foram movidos para o Hive na operação anterior.
+
+<!-- #region -->
+```python
+$ hdfs dfs -put dados_covid /user/eugenio/
+```
+<!-- #endregion -->
+
+**Explorando os dados**
+
+```python
+!hdfs dfs -ls /user/eugenio/dados_covid
+```
+
+Para este exemplo criarei as visualizações usando o PySpark
+
+```python
+from pyspark.sql.types import *
+from pyspark.sql.functions import col
+```
+
+```python
+# Ler os dados diretamente no diretorio /user/eugenio/dados_covid/ 
+# no hdfs, lembrando que são arquivos parametrizados.
+```
+
+```python
+dados_covid = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
+```
+
+```python
+# O layout do dataframe é o seguinte:
+```
+
+```python
+print(dados_covid.printSchema())
+dados_covid.show(5)
+```
+
+```python
+# Manipulação dos dados
+```
+
+```python
+type(dados_covid)
+```
+
+```python
+
+```
+
+```python
+
+```
 
 ```python
 
@@ -224,7 +286,9 @@ Espero ter contribuido com o seu desenvolvimento de alguma forma.
 [ 2 ] [https://github.com/carlosemsantana/docker-namenode-hdfs](<https://github.com/carlosemsantana/docker-namenode-hdfs>)<br>
 [ 3 ] [https://github.com/carlosemsantana/docker-hive-server](<https://github.com/carlosemsantana/docker-hive-server>)<br>
 [ 4 ] [https://hive.apache.org](<https://hive.apache.org>)<br>
-[ 5 ] [https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types](<https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types>)
+[ 5 ] [https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types](<https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types>)<br>
+[ 6 ] [https://spark.apache.org](<https://spark.apache.org/>)<br>
+[ 7 ] [https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.types.StructType.html](<https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.types.StructType.html>)
 
 
 
