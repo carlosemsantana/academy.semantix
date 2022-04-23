@@ -136,9 +136,9 @@ $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2
 
 <table>
     <tr>
-        <td >**Coluna**</td>
-        <td >**Tipo dados**</td>
-        <td >**Descrição**</td>
+        <td ><b>CAMPO</b></td>
+            <td ><b>TIPO DADOS</b></td>
+            <td ><b>DESCRIÇÃO</b></td>
     </tr>
     <tr>
         <td>regiao</td>
