@@ -143,52 +143,52 @@ $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2
     <tr>
         <td>regiao</td>
         <td>StringType</td>
-        <td></td>
+        <td>Região do País. **Atenção**. Existe uma região com nome "Brasil", não encontramos o dicionário de dados com esclarecimento a respeito de que forma os dados aqui estão representados. Verificar</td>
     </tr>
     <tr>
         <td>estado</td>
         <td>StringType</td>
-        <td></td>
+        <td>Sigla do Estado</td>
     </tr>
      <tr>
         <td>municipio</td>
         <td>StringType</td>
-        <td></td>
+        <td>Nome do Município</td>
     </tr>
     <tr>
         <td>coduf</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Código da Unidade Federativa</td>
     </tr>
     <tr>
         <td>codmun</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Código do Município</td>
     </tr>
     <tr>
         <td>codRegiaoSaude</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Código da Região de Saúde</td>
     </tr>
     <tr>
         <td>nomeRegiaoSaude</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Considera-se Região de Saúde o espaço geográfico contínuo constituído por agrupamento de Municípios limítrofes, delimitado a partir de identidades culturais, econômicas e sociais e de redes de comunicação e infraestrutura de transportes compartilhados, com a finalidade de integrar a organização, o planejamento e a execução de ações e serviços de saúde.</td>
     </tr>
     <tr>
         <td>data</td>
         <td>DateType</td>
-        <td></td>
+        <td>Data da notificação. O processo de atualização dos dados sobre casos e óbitos confirmados por COVID-19 no Brasil é realizado diariamente pelo Ministério da Saúde através das informações oficiais repassadas pelas Secretarias Estaduais de Saúde das 27 Unidades Federativas brasileiras. Os dados fornecidos pelos estados são consolidados e disponibilizados publicamente todos os dias, em torno das 19h.</td>
     </tr>
     <tr>
         <td>semanaEpi</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>período de tempo padrão para agrupar mortes e outros eventos epidemiológicos, conhecido como semana epidemiológica. A divisão dos 365 dias do ano em 52 ou 53 semanas epidemiológicas constitui o chamado calendário epidemiológico.</td>
     </tr>
     <tr>
         <td>populacaoTCU2019</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>População Residente - Estimativas para o TCU - DATASUS</td>
     </tr>
     <tr>
         <td>casosAcumulado</td>
@@ -198,7 +198,8 @@ $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2
     <tr>
         <td>casosNovos</td>
         <td>IntegerType</td>
-        <td>Número de casos novos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde em relação ao dia anterior</td>
+        <td>Número de casos novos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde em relação ao dia anterior.
+Reflete o número de casos diagnosticados e registrados pelas secretarias de saúde, não significando a data de início dos sintomas. Para análise dos casos por data de início dos sintomas, deve-se utilizar os dados do sistema e-SUS VE e do Sistema de Vigilância Epidemiológica da Gripe (SIVEP-Gripe), para os casos de Síndrome Respiratória Aguda Grave (SRAG) Hospitalizados, além dos dados provenientes dos sistemas de informação de Síndrome Gripal implantados em alguns estados.</td>
     </tr>
      <tr>
         <td>obitosAcumulado</td>
@@ -208,12 +209,13 @@ $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2
      <tr>
         <td>obitosNovos</td>
         <td>IntegerType</td>
-        <td>Número de óbitos novos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde em relação ao dia anterior.</td>
+        <td>Número de óbitos novos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde em relação ao dia anterior.
+Reflete o número de óbitos reportados pelas secretarias de saúde na data em que tiveram a confirmação laboratorial ou clínico epidemiológica. Não reflete a data de ocorrência do óbito. Para análise de óbitos por data de ocorrência, deve-se utilizar os dados registrados no Sistema de Vigilância Epidemiológica da Gripe (SIVEP-Gripe), onde devem ser notificados todos os casos de Síndrome Respiratória Aguda Grave (SRAG) Hospitalizados ou óbitos por SRAG, independente de hospitalização. Também devem ser observados os registros de óbitos no Sistema de Informação sobre Mortalidade (SIM).</td>
     </tr>
      <tr>
         <td>Recuperadosnovos</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Segundo a Organização Mundial da Saúde, para os casos de COVID-19 confirmados por critério laboratorial, considera-se como recuperados aqueles que tiveram dois resultados negativos para SARS-CoV-2 com pelo menos 1 dia de intervalo. Para os casos leves, a OMS estima que tempo entre o início da infecção e a recuperação dure até 14 dias.</td>
     </tr>
      <tr>
         <td>emAcompanhamentoNovos</td>
@@ -223,7 +225,7 @@ $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2
      <tr>
         <td>interior/metropolitana</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Interior ou Metropolitana?. **Atenção**. não encontramos o dicionário de dados com esclarecimento a respeito de que forma os dados aqui estão representados. Verificar.</td>
     </tr>
 </table>
 
@@ -402,7 +404,8 @@ Espero ter contribuido com o seu desenvolvimento de alguma forma.
 [ 5 ] [https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types](<https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types>)<br>
 [ 6 ] [https://spark.apache.org](<https://spark.apache.org/>)<br>
 [ 7 ] [https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.types.StructType.html](<https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.types.StructType.html>)<br>
-[ 8 ] [https://academy.semantix.ai/](<https://academy.semantix.ai/>)
+[ 8 ] [https://academy.semantix.ai/](<https://academy.semantix.ai/>)<br>
+[ 9 ] [https://bvsms.saude.gov.br/bvs/saudelegis/cit/2011/res0001_29_09_2011.html](<https://bvsms.saude.gov.br/bvs/saudelegis/cit/2011/res0001_29_09_2011.html>)
 
 
 
