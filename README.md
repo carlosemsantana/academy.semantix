@@ -130,21 +130,15 @@ Para criarmos a estrutura da tabela é precisa conhecer qual é a estrutura dos 
 $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2021.csv | head -n 1
 ```
 <!-- #endregion -->
-| Syntax | Description |
-| :----------- | :----------- |
-| Header | Title jhkhdkjahd jakdshdkjashdjkasdmnb jkhdasjkhdjkashdjkashd dsajkhdajkshdjkash |
-| Paragraph | Text | 
-
-
 
 
 
 
 <table>
     <tr>
-        <td >Coluna</td>
-        <td >Tipo dados</td>
-        <td >Descrição</td>
+        <td >**Coluna**</td>
+        <td >**Tipo dados**</td>
+        <td >**Descrição**</td>
     </tr>
     <tr>
         <td>regiao</td>
@@ -199,22 +193,22 @@ $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2
     <tr>
         <td>casosAcumulado</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Número total de casos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde no período considerado.</td>
     </tr>
     <tr>
         <td>casosNovos</td>
         <td>IntegerType</td>
-        <td align='center'>Número de casos novos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde em relação ao dia anterior</td>
+        <td>Número de casos novos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde em relação ao dia anterior</td>
     </tr>
      <tr>
         <td>obitosAcumulado</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Número total de óbitos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde no período considerado.</td>
     </tr>
      <tr>
         <td>obitosNovos</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>Número de óbitos novos confirmados por COVID-19 que foram registrados pelas Secretarias Municipais e Estaduais de Saúde em relação ao dia anterior.</td>
     </tr>
      <tr>
         <td>Recuperadosnovos</td>
@@ -224,7 +218,7 @@ $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2
      <tr>
         <td>emAcompanhamentoNovos</td>
         <td>IntegerType</td>
-        <td></td>
+        <td>São considerados como “em acompanhamento” todos os casos notificados nos últimos 14 dias pelas Secretarias Estaduais de Saúde e que não evoluíram para óbito. Além disso, dentre os casos que apresentaram SRAG e foram hospitalizados, considera-se “em acompanhamento” todos aqueles que foram internados nos últimos 14 dias e que não apresentam registro de alta ou óbito no SIVEP Gripe.</td>
     </tr>
      <tr>
         <td>interior/metropolitana</td>
