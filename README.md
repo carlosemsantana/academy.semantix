@@ -391,22 +391,12 @@ Casos confirmados
 ```python
 # imports
 from pyspark.sql import *
-```
 
-```python
 # Ler fonte de dados no hdfs
-```
-
-```python
 dados = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
-```
 
-```python
 # O layout do dataframe é o seguinte:
-```
-
-```python
-dados.printSchema()
+# dados.printSchema()
 ```
 
 ![](img/printSchema.png)
@@ -416,60 +406,41 @@ dados.printSchema()
 casosAcumulado = dados.withColumn("casosAcumulado", dados["casosAcumulado"].cast(IntegerType()))
 obitosAcumulado = dados.withColumn("obitosAcumulado", dados["obitosAcumulado"].cast(IntegerType()))
 Recuperadosnovos = dados.withColumn("Recuperadosnovos", dados["Recuperadosnovos"].cast(IntegerType()))
-```
 
-```python
 # Visualização 1
-```
 
-```python
 casosConfirmados = casosAcumulado.agg({"casosAcumulado": "max"})
 obitosConfirmados = obitosAcumulado.agg({"obitosAcumulado": "max"})
 casosRecuperados = Recuperadosnovos.agg({"Recuperadosnovos": "max"})
-```
 
-```python
 # Cálculo para descobrir os casos recuperados
-```
-
-```python
 EmAcompanhamento = casosConfirmados.collect()[0][0] - casosRecuperados.collect()[0][0] - obitosConfirmados.collect()[0][0]
-```
 
-```python
 # Cria uma lista dados_V1 para gravarmos a visão 1 como tabela Hive
 visao1 = [('CasosRecuperados', casosRecuperados.collect()[0][0]), ("EmAcompanhamento",EmAcompanhamento )]
-```
-
-```python
-visao1
 ```
 
 **3.1 Salvar a primeira visualização como tabela Hive**
 
 ```python
 # Transforma a "visao1" em um DataFrame para gravarmos no Hive
-```
-
-```python
 DF = spark.createDataFrame(visao1, ['CasosRecuperados','EmAcompanhamento'])
-```
 
-```python
 # Gravar a Visão 1 em uma tabela no banco de dados Hive
-```
-
-```python
 DF.write.mode("overwrite").saveAsTable("covid19.Visao1")
+
+# Lista os bancos de dados 
+# spark.catalog.listDatabases()
 ```
 
-```python
-spark.catalog.listDatabases()
-```
+![](img/listaBancoDadosHive.png)
 
 ```python
-spark.catalog.listTables(dbName="covid19")
+# Lista as tabelas Hive
+# spark.catalog.listTables(dbName="covid19")
 ```
+
+![](img/listaTabelasHive.png)
 
 ```python
 
