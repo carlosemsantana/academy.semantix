@@ -406,8 +406,10 @@ dados = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
 ```
 
 ```python
-print(dados.printSchema())
+dados.printSchema()
 ```
+
+![](img/printSchema.png)
 
 ```python
 # Acesso e ajuste dos tipos de dados para realizarmos os cálculos necessários
