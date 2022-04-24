@@ -130,14 +130,16 @@ Para criarmos a estrutura da tabela é precisa conhecer qual é a estrutura dos 
 $ hdfs dfs -cat /user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2021.csv | head -n 1
 ```
 <!-- #endregion -->
+**Resposta:** regiao; estado; municipio; coduf; codmun; codRegiaoSaude; nomeRegiaoSaude; data; semanaEpi; populacaoTCU2019; casosAcumulado; casosNovos; obitosAcumulado; obitosNovos; Recuperadosnovos; emAcompanhamentoNovos; interior/metropolitana
 
 
+Fonte de dados da Pesquisa da descrição dos campos [https://covid.saude.gov.br/](<https://covid.saude.gov.br/>).
 
 
 <table>
     <tr>
         <td ><b>CAMPO</b></td>
-            <td ><b>TIPO DADOS</b></td>
+            <td ><b>TIPO</b></td>
             <td ><b>DESCRIÇÃO</b></td>
     </tr>
     <tr>
@@ -234,18 +236,27 @@ Reflete o número de óbitos reportados pelas secretarias de saúde na data em q
 
 
 
-**Estrutura do arquivo**
+As **tabelas Particionadas** no Apache Hive permitem otimizar o desempenho durante as pesquisas.
+
+
+**Atenção:** Verifique se o cluster de desenvolvimento, o qual está estudando, está com o particionamento dinâmico está ativado, caso não esteja, ative-o com as seguintes instruções:
+* o SET hive.exec.dynamic.partition = true;
+* o SET hive.exec.dynamic.partition.mode = nonstrict ; 
+
+
+**Criar as tabelas no Hive**
 
 <!-- #region -->
 ```python
-$ create table acompanhamento_casos_covid (
+# Criar uma partição sem partição para carga incial dos dados. (poderia ser tabela temporária)
+$ create table casos_covid (
                 regiao STRING,
                 estado STRING, 
-                municipio INT, 
+                municipio STRING, 
                 coduf INT, 
                 codmun INT,
-                codRegiaoSaude;
-                nomeRegiaoSaude;
+                codRegiaoSaude INT,
+                nomeRegiaoSaude STRING,
                 data DATE,
                 semanaEpi INT,
                 populacaoTCU2019 INT,
@@ -255,27 +266,58 @@ $ create table acompanhamento_casos_covid (
                 obitosNovos INT,
                 Recuperadosnovos INT,
                 emAcompanhamentoNovos INT,
-                interior_metropolitana INT)
-  PARTITIONED BY (ds String)
+                interior_metropolitana INT
+                )
   ROW FORMAT DELIMITED
   FIELDS TERMINATED BY ';'
-  LINES TERMINATED BY '\n'
   STORED AS TEXTFILE
-  tBLPROPERTIES ("skip.header.line.count"="1");
+  LOCATION '/user/eugenio/dados_covid';
+  
+# Tabela particionada
+$ create table casos_covid_municipio(
+                regiao STRING,
+                estado STRING, 
+                coduf INT, 
+                codmun INT,
+                codRegiaoSaude INT,
+                nomeRegiaoSaude STRING,
+                data DATE,
+                semanaEpi INT,
+                populacaoTCU2019 INT,
+                casosAcumulado INT,
+                casosNovos INT,
+                obitosAcumulado INT,
+                obitosNovos INT,
+                Recuperadosnovos INT,
+                emAcompanhamentoNovos INT,
+                interior_metropolitana INT
+  )
+  PARTITIONED BY (municipio String)
+  ROW FORMAT DELIMITED
+  STORED AS TEXTFILE;
 ```
 <!-- #endregion -->
 
 **Resultado:**
 
 
-![](img/tabela_particionada.png)
+Tabela sem partição
 
 
-Visualizar a descrição da tabela **acompanhamento_casos_covid**
+![](img/tabela_casos_covid.png)
+
+
+Tabela particionada
+
+
+![](img/tabela_particionada_2.png)
+
+
+Visualizar a descrição da tabela particionada **casos_covid_municipio**
 
 <!-- #region -->
 ```python
-hive> desc formatted acompanhamento_casos_covid;
+hive> desc formatted casos_covid_municipio;
 ```
 <!-- #endregion -->
 
@@ -285,67 +327,78 @@ hive> desc formatted acompanhamento_casos_covid;
 ![](img/particao.png)
 
 
-Carregar os arquivo do HDFS `/user/eugenio/dados_covid/*.*` para a tabela Hive **acompanhamento_casos_covid**
-
-```python
-!hdfs dfs -ls /user/eugenio/dados_covid
-```
-
-![](img/hdfs-ls.png)
-
-<!-- #region -->
-```python
-$ LOAD DATA INPATH '/user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte1_06jul2021.csv' OVERWRITE INTO TABLE acompanhamento_casos_covid PARTITION (ds='2020-1');
-
-$ LOAD DATA INPATH '/user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2020_Parte2_06jul2021.csv' OVERWRITE INTO TABLE acompanhamento_casos_covid PARTITION (ds='2020-2');
-
-LOAD DATA INPATH '/user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2021_Parte1_06jul2021.csv' OVERWRITE INTO TABLE acompanhamento_casos_covid PARTITION (ds='2021-1');
-
-LOAD DATA INPATH '/user/eugenio/dados_covid/HIST_PAINEL_COVIDBR_2021_Parte2_06jul2021.csv' OVERWRITE INTO TABLE acompanhamento_casos_covid PARTITION (ds='2021-2');
-
-```
-<!-- #endregion -->
-
 **Explorando os dados carregados no Hive**
-
-
-**Observação:** Caso na carga dos dados ocorra algum erro, a fonte de dados deverá ser enviada novamente para o HDFS, porque no processo de carga os arquivos são movidos fisicamente do hdfs.
 
 
 ![](img/select.png)
 
 
-**3. Criar as 3 vizualizações pelo Spark com os dados enviados para o HDFS**
-
-
-Para criar as visualizações, precisamos enviar novamente os dados para o HDFS, porque foram movidos do HDFS para o Hive na operação anterior.
+**Criar as partições automaticamente em tempo de carregamento**
 
 <!-- #region -->
 ```python
-$ hdfs dfs -put dados_covid /user/eugenio/
+$ hive> insert overwrite table casos_covid_municipio partition (municipio) select * from casos_covid;
 ```
 <!-- #endregion -->
 
-**Explorando os dados**
+![](img/show_partitions.png)
 
 
-![](img/hdfs-ls.png)
+**Consulta as partições criadas no hdfs**
 
 
-Para este exemplo criarei as visualizações usando o PySpark a partir da fonte de dados no HDFS.
+![](img/hive_partitions.png)
+
+
+**3. Criar as 3 vizualizações pelo Spark com os dados enviados para o HDFS**
+
+
+**Visão 1**
+
+Estimativa de casos recuperados e em acompanhamento
+
+**Casos recuperados** 
+
+Os registros foram gravados na tabela com valor acumulado, a região = "Brasil" é o total acumulado.
+
+Cálculo: Casos recuperados = MAX(Recuperadosnovos)
+
+**Casos em acompanhamento**
+
+Para descobrir os casos em acompanhamento é preciso aplicar a seguinte fórmula:
+
+Cálculo: Casos em acompanhamento = casosConfirmados - obitosConfirmados - Recuperadosnovos
+
+**Visão 2**
+
+Casos confirmados
+- Acumulado
+- Casos novos
+- Incidência
+
+**Visão 3**
+
+Óbitos confirmados
+- Óbitos acumulados
+- Casos novos
+- Letalidade
+- Mortalidade
 
 ```python
-from pyspark.sql.types import *
-from pyspark.sql.functions import col
+# Jupyter Notebook com suporte ao PySpark.
 ```
 
 ```python
-# Ler os dados diretamente no diretorio /user/eugenio/dados_covid/ 
-# no hdfs, lembrando que são arquivos parametrizados.
+# imports
+from pyspark.sql import *
 ```
 
 ```python
-dados_covid = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
+# Ler fonte de dados no hdfs
+```
+
+```python
+dados = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
 ```
 
 ```python
@@ -353,16 +406,151 @@ dados_covid = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true
 ```
 
 ```python
-print(dados_covid.printSchema())
-dados_covid.show(5)
+print(dados.printSchema())
 ```
 
 ```python
-# Manipulação dos dados
+# Acesso e ajuste dos tipos de dados para realizarmos os cálculos necessários
+casosAcumulado = dados.withColumn("casosAcumulado", dados["casosAcumulado"].cast(IntegerType()))
+obitosAcumulado = dados.withColumn("obitosAcumulado", dados["obitosAcumulado"].cast(IntegerType()))
+Recuperadosnovos = dados.withColumn("Recuperadosnovos", dados["Recuperadosnovos"].cast(IntegerType()))
 ```
 
 ```python
-type(dados_covid)
+# Visualização 1
+```
+
+```python
+casosConfirmados = casosAcumulado.agg({"casosAcumulado": "max"})
+obitosConfirmados = obitosAcumulado.agg({"obitosAcumulado": "max"})
+casosRecuperados = Recuperadosnovos.agg({"Recuperadosnovos": "max"})
+```
+
+```python
+# Cálculo para descobrir os casos recuperados
+```
+
+```python
+EmAcompanhamento = casosConfirmados.collect()[0][0] - casosRecuperados.collect()[0][0] - obitosConfirmados.collect()[0][0]
+```
+
+```python
+# Cria uma lista dados_V1 para gravarmos a visão 1 como tabela Hive
+visao1 = [('CasosRecuperados', casosRecuperados.collect()[0][0]), ("EmAcompanhamento",EmAcompanhamento )]
+```
+
+```python
+visao1
+```
+
+**3.1 Salvar a primeira visualização como tabela Hive**
+
+```python
+# Transforma a "visao1" em um DataFrame para gravarmos no Hive
+```
+
+```python
+DF = spark.createDataFrame(visao1, ['CasosRecuperados','EmAcompanhamento'])
+```
+
+```python
+# Gravar a Visão 1 em uma tabela no banco de dados Hive
+```
+
+```python
+DF.write.mode("overwrite").saveAsTable("covid19.Visao1")
+```
+
+```python
+spark.catalog.listDatabases()
+```
+
+```python
+spark.catalog.listTables(dbName="covid19")
+```
+
+```python
+
+```
+
+```python
+#dados.filter(dados.regiao="Brasil").collect()
+```
+
+```python
+
+```
+
+```python
+#dados.groupBy("municipio").agg(avg("casosAcumulado")).show(100)
+```
+
+```python
+#recuperados = dados.groupBy("municipio").agg(sum("Recuperadosnovos").alias("Casos Recuperados")).show()
+```
+
+```python
+#recuperados.show(27)
+```
+
+```python
+#dados.select("regiao","data").where(col("Recuperadosnovos").isNotNull()).show()
+```
+
+```python
+
+```
+
+```python
+
+```
+
+```python
+#oac = obitosAcumulado.groupBy('municipio').sum('obitosAcumulado')
+```
+
+```python
+#teste = oac.toPandas()
+```
+
+```python
+#teste.sum()
+```
+
+```python
+#obitos.groupBy('municipio').agg(sum('obitosNovos')).show()
+```
+
+```python
+#dados.select('regiao').distinct().show()
+```
+
+```python
+#dados.select('municipio').distinct().show()
+```
+
+```python
+#dados.groupBy('regiao').sum('obitosNovos').show()
+```
+
+```python
+#dados.groupBy('regiao').max('obitosNovos').cast(IntegerType())
+```
+
+```python
+
+```
+
+```python
+
+```
+
+```python
+
+```
+
+```python
+
 ```
 
 ```python
