@@ -352,37 +352,30 @@ $ hive> insert overwrite table casos_covid_municipio partition (municipio) selec
 
 **3. Criar as 3 vizualizações pelo Spark com os dados enviados para o HDFS**
 
-
+<!-- #region -->
 **Visão 1**
 
-Estimativa de casos recuperados e em acompanhamento
-
-**Casos recuperados** 
+Estimativa de casos recuperados e em acompanhamento.
 
 Os registros foram gravados na tabela com valor acumulado, a região = "Brasil" é o total acumulado.
 
-Cálculo: Casos recuperados = MAX(Recuperadosnovos)
+**Casos recuperados**
 
 **Casos em acompanhamento**
 
-Para descobrir os casos em acompanhamento é preciso aplicar a seguinte fórmula:
-
-Cálculo: Casos em acompanhamento = casosConfirmados - obitosConfirmados - Recuperadosnovos
 
 **Visão 2**
 
 Casos confirmados
 - Acumulado
 - Casos novos
-- Incidência
 
 **Visão 3**
 
 Óbitos confirmados
 - Óbitos acumulados
 - Casos novos
-- Letalidade
-- Mortalidade
+<!-- #endregion -->
 
 ```python
 # Jupyter Notebook com suporte ao PySpark.
@@ -390,7 +383,8 @@ Casos confirmados
 
 ```python
 # imports
-from pyspark.sql import *
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
 
 # Ler fonte de dados no hdfs
 dados = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
@@ -402,23 +396,46 @@ dados = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
 ![](img/printSchema.png)
 
 ```python
-# Acesso e ajuste dos tipos de dados para realizarmos os cálculos necessários
-casosAcumulado = dados.withColumn("casosAcumulado", dados["casosAcumulado"].cast(IntegerType()))
-obitosAcumulado = dados.withColumn("obitosAcumulado", dados["obitosAcumulado"].cast(IntegerType()))
-Recuperadosnovos = dados.withColumn("Recuperadosnovos", dados["Recuperadosnovos"].cast(IntegerType()))
+# Pensando em Performance a data poderia ser dinâmica, ao invés de varrer o banco.
+# alterar dinâmicamente somente a data no filtro e recupera os dados consolidados 
+# por dia.
 
-# Visualização 1
+diaHoje = "2021-07-06" # Entrada de dados dinâmica
 
-casosConfirmados = casosAcumulado.agg({"casosAcumulado": "max"})
-obitosConfirmados = obitosAcumulado.agg({"obitosAcumulado": "max"})
-casosRecuperados = Recuperadosnovos.agg({"Recuperadosnovos": "max"})
+df = dados.select(dados.casosAcumulado.alias("Acumulado").cast("int"),
+                  dados.casosNovos.alias("CasosNovosConfirmados").cast("int"),
+                  dados.obitosAcumulado.alias("ObitosConfirmados").cast("int"),
+                  dados.obitosNovos.alias("NovosObitosConfirmados").cast("int"),
+                  dados.Recuperadosnovos.alias("CasosRecuperados").cast("int"),
+                  dados.emAcompanhamentoNovos.alias("EmAcompanhamento").cast("int"))\
+            .filter(col("data")==diaHoje)\
+            .filter(col("regiao")=="Brasil")
 
-# Cálculo para descobrir os casos recuperados
-EmAcompanhamento = casosConfirmados.collect()[0][0] - casosRecuperados.collect()[0][0] - obitosConfirmados.collect()[0][0]
-
-# Cria uma lista dados_V1 para gravarmos a visão 1 como tabela Hive
-visao1 = [('CasosRecuperados', casosRecuperados.collect()[0][0]), ("EmAcompanhamento",EmAcompanhamento )]
 ```
+
+![](img/visao1_2_3.png)
+
+```python
+# Cria uma lista para gravarmos a visão 1 como tabela Hive
+visao1 = [('CasosRecuperados', df.collect()[0][4]), ("EmAcompanhamento",df.collect()[0][5])]
+```
+
+![](img/visao1.png)
+
+```python
+# Cria uma lista para gravarmos a visão 2 como tabela hdf
+visao2 = [('Acumulado', df.collect()[0][0]), ("CasosNovosConfirmados",df.collect()[0][1])]
+```
+
+![](img/visao2.png)
+
+```python
+# Cria uma lista para gravarmos a visão 2 como tabela Kafka
+visao3 = [('ObitosConfirmados', df.collect()[0][2]), ("NovosObitosConfirmados",df.collect()[0][3])]
+```
+
+![](img/visao3.png)
+
 
 **3.1 Salvar a primeira visualização como tabela Hive**
 
@@ -429,6 +446,9 @@ DF = spark.createDataFrame(visao1, ['CasosRecuperados','EmAcompanhamento'])
 # Gravar a Visão 1 em uma tabela no banco de dados Hive
 DF.write.mode("overwrite").saveAsTable("covid19.Visao1")
 
+```
+
+```python
 # Lista os bancos de dados 
 # spark.catalog.listDatabases()
 ```
@@ -442,96 +462,161 @@ DF.write.mode("overwrite").saveAsTable("covid19.Visao1")
 
 ![](img/listaTabelasHive.png)
 
-```python
 
+**3.2 Salvar a segunda visualização com formato parquet e compressão snappy**
+
+```python
+# Grava Visão 2 no hdfs
+# Transforma a "visao2" em um DataFrame para gravarmos no hdfs
+DF_2 = spark.createDataFrame(visao2, ['CasosRecuperados','EmAcompanhamento'])
+DF_2.write.parquet("/user/eugenio/covid19/Visao2_parquet", mode="overwrite", compression="snappy")
 ```
 
 ```python
-#dados.filter(dados.regiao="Brasil").collect()
+# Confirmando se o arquivo foi gravado
 ```
 
 ```python
+# !hdfs dfs -ls /user/eugenio/covid19/Visao2_parquet
+```
 
+![](img/parquet.png)
+
+
+**3.3 Salvar a terceira visualização em um tópico no Kafka**
+
+
+Para salvar a terceira visualização em um tópico do Kafka, precisamos criar o tópico, segue abaixo exemplo como acessar o contâiner do Kafka, criar o tópico e verificar se foi criado.
+
+<!-- #region -->
+```python
+
+$ docker exec -it kafka bash
+
+$ bash-4.4> kafka-topics.sh --bootstrap-server localhost:9092 --topic painel-covid19 --describe
+
+```
+<!-- #endregion -->
+
+**Resultado:**
+
+![](img/topico_kafka.png)
+
+```python
+# Inscrição no tópico que foi criado
 ```
 
 ```python
-#dados.groupBy("municipio").agg(avg("casosAcumulado")).show(100)
+# Ler todas as mensagens postadas no tópico criado.
+topic_read = spark.read\
+    .format("kafka")\
+    .option("kafka.bootstrap.servers", "kafka:9092")\
+    .option("subscribe", "painel-covid19")\
+    .option("startingOffsets","earliest")\
+    .load()
 ```
 
 ```python
-#recuperados = dados.groupBy("municipio").agg(sum("Recuperadosnovos").alias("Casos Recuperados")).show()
+# Estrutura criada
+# topic_read_stream.printSchema()
+```
+
+![](img/p_kafka.png)
+
+
+Teste o tópico, criando um produtor e enviando mensagens para verificar se está funcionando.
+
+<!-- #region -->
+```python
+
+$ kafka-console-producer.sh --broker-list localhost:9092 --topic painel-covid19
+
+```
+<!-- #endregion -->
+
+**Envio de mensagens via console Kafka**
+
+
+![](img/envio_mensagens_kafka.png)
+
+
+**Ler o tópico**
+
+```python
+topic_string = topic_read.select(col("key").cast("string"), col("value").cast("string"))
+#topic_string.show()
+```
+
+![](img/ler_topico.png)
+
+
+** Gravar mensagens no tópico**
+
+```python
+# Busca os dados no formato binário para envio para kafka.
+diaHoje = "2021-07-06" # Entrada de dados dinâmica
+df_bin = dados.select(dados.obitosAcumulado.alias("ObitosConfirmados"),
+                  dados.obitosNovos.alias("NovosObitosConfirmados"))\
+            .filter(col("data")==diaHoje)\
+            .filter(col("regiao")=="Brasil")
 ```
 
 ```python
-#recuperados.show(27)
+# Import necessário para envio de dados para Kafka, existem várias formas de envio.
+# Teste de envio
+# Existe uma condição, os dados deverão estar no formato binário
+from kafka import KafkaProducer
+producer = KafkaProducer(bootstrap_servers='kafka:9092')
+producer.send('painel-covid19', key=b'101', value=b"Novo Teste")
 ```
 
 ```python
-#dados.select("regiao","data").where(col("Recuperadosnovos").isNotNull()).show()
+topic_string = topic_read.select(col("key").cast("string"), col("value").cast("string"))
+#topic_string.show()
+```
+
+![](img/teste_kafka.png)
+
+
+**Envio dados para Kafka**
+
+```python
+# Conversão dos tipos de dados 
+# Cria uma lista para gravarmos a visão 2 como tabela Kafka
+visao3 = [('ObitosConfirmados', df_bin.collect()[0][0]), ("NovosObitosConfirmados",df_bin.collect()[0][1])]
 ```
 
 ```python
-
+# Envia os dados para o tópico
+producer.send('painel-covid19', key=b'200', value= visao3[0][0].encode())
+producer.send('painel-covid19', key=b'201', value= visao3[0][1].encode())
+producer.send('painel-covid19', key=b'202', value= visao3[1][0].encode())
+producer.send('painel-covid19', key=b'203', value= visao3[1][1].encode())
 ```
 
-```python
+![](img/s_b.png)
 
+```python
+# Consulta dos dados enviados, lembrado virão todos os testes.
+topic_string = topic_read.select(col("key").cast("string"), col("value").cast("string"))
+#topic_string.show()
 ```
 
+![](img/s_b2.png)
+
+
+**3.4 Criar a visualização pelo Spark com os dados enviados para o HDFS **
+
 ```python
-#oac = obitosAcumulado.groupBy('municipio').sum('obitosAcumulado')
+# Ler fonte de dados no hdfs
+dados_hdfs = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
 ```
 
-```python
-#teste = oac.toPandas()
-```
+![](img/printSchema.png)
 
 ```python
-#teste.sum()
-```
-
-```python
-#obitos.groupBy('municipio').agg(sum('obitosNovos')).show()
-```
-
-```python
-#dados.select('regiao').distinct().show()
-```
-
-```python
-#dados.select('municipio').distinct().show()
-```
-
-```python
-#dados.groupBy('regiao').sum('obitosNovos').show()
-```
-
-```python
-#dados.groupBy('regiao').max('obitosNovos').cast(IntegerType())
-```
-
-```python
-
-```
-
-```python
-
-```
-
-```python
-
-```
-
-```python
-
-```
-
-```python
-
-```
-
-```python
-
+# Mudar a estrutura dos dados para trabalhar com o Pandas.
+dados_hdfs.toPandas()
 ```
 
 ```python
