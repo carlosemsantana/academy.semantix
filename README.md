@@ -5,7 +5,7 @@
 
 Este artigo foi inspirado no conteúdo do curso de Engenharia de Dados da [Semantix Academy](<https://academy.semantix.ai/>). 
 
-Objetivo deste documento é um treinamento acadêmico; desenvolver alguns exercícios na prática, utilizando dados públicos disponíveis no site [https://covid.saude.gov.br/](<https://covid.saude.gov.br/>).
+Objetivo deste documento é um exercício acadêmico para praticar alguns conceitos.
 
 
 
@@ -657,7 +657,7 @@ esquema = "regiao STRING, estado STRING, municipio STRING, coduf INT, codmun INT
 ```
 
 ```python
-# Carregar os dados do hdfs na tabela criada no Spark.
+# Carregar os dados com os dados que foram enviados no hdfs na tabela criada no Spark.
 dados = spark.read.csv("/user/eugenio/dados_covid/", sep=";", schema=esquema, header="false")
 ```
 
@@ -682,26 +682,13 @@ dados_spark.groupBy('regiao').max()
 
 ![](img/groupby_sql.png)
 
-```python
+<!-- #region -->
+Feito!
 
-```
 
-```python
+Espero ter contribuido com o seu desenvolvimento de alguma forma com a pratica destes exercícios.
 
-```
-
-```python
-
-```
-
-```python
-
-```
-
-Chegou o final da jornada.
-
-Espero ter contribuido com o seu desenvolvimento de alguma forma.
-
+<!-- #endregion -->
 
 [Carlos Eugênio Moreira de Santana](<https://github.com/carlosemsantana>)
 
@@ -721,7 +708,3 @@ Espero ter contribuido com o seu desenvolvimento de alguma forma.
 
 
 
-
-```python
-
-```
