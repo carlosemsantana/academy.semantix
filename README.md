@@ -1,4 +1,4 @@
-# Exercícios
+# Exercícios curso de Engenharia de Dados Semantix 
 
 
 ### Resumo
