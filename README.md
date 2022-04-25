@@ -18,7 +18,8 @@ Objetivo deste documento é um exercício acadêmico para praticar alguns concei
 Para executar os próximos exemplos, você precisará baixar e instalar alguns "contâniners" docker em sua máquina. Estou estudando a partir de um cluster de Big Data disponibilizado no curso de Engenharia de Dados na Semantix Academy e o meu ambiente é Linux.
 
 
-* Noções de programação em Python 
+* Noções de programação em Python;
+* Git instalado;<br>
 * Docker instalado e configurado;
 * Cluster de testes instalado;<br>
 ```$ git clone https://github.com/rodrigo-reboucas/docker-bigdata.git ```
