@@ -9,6 +9,10 @@ Objetivo deste documento é um exercício acadêmico para praticar alguns concei
 
 
 
+>Este documento foi escrito no Jupiter Notebook com suporte a gravação arquivos Rmd e Spark através do PySpark >(Python3), as publicações neste git partiram diretamente do contâiner do docker spark, usando os comandos do git.
+
+
+
 ### Pré-requisitos
 
 
