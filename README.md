@@ -588,6 +588,10 @@ visao3 = [('ObitosConfirmados', df_bin.collect()[0][0]), ("NovosObitosConfirmado
 
 ```python
 # Envia os dados para o tópico
+# Lembrando que os dados da Visão serão enviados no formato par e valor
+# porém, fatiados, Chave + Valor para o valor do campo e assim
+# respectivamente até o fim da mensagem.
+# 
 producer.send('painel-covid19', key=b'200', value= visao3[0][0].encode())
 producer.send('painel-covid19', key=b'201', value= visao3[0][1].encode())
 producer.send('painel-covid19', key=b'202', value= visao3[1][0].encode())
@@ -598,6 +602,10 @@ producer.send('painel-covid19', key=b'203', value= visao3[1][1].encode())
 
 ```python
 # Consulta dos dados enviados, lembrado virão todos os testes.
+# Perceba que na chaves código 200 a 203 está a mensagem que foi
+# transmitida, o cliente precisará agrupar os dados para ler a
+# mensagem completa. Alternativamente, poderíamos criar um protocolo
+# e transmitir a mensagem em única chave. (Facilitaria a programação)
 topic_string = topic_read.select(col("key").cast("string"), col("value").cast("string"))
 #topic_string.show()
 ```
@@ -607,16 +615,79 @@ topic_string = topic_read.select(col("key").cast("string"), col("value").cast("s
 
 **3.4 Criar a visualização pelo Spark com os dados enviados para o HDFS **
 
-```python
-# Ler fonte de dados no hdfs
-dados_hdfs = spark.read.csv("/user/eugenio/dados_covid/", sep=";", header="true")
-```
 
 ![](img/printSchema.png)
 
 ```python
-# Mudar a estrutura dos dados para trabalhar com o Pandas.
-dados_hdfs.toPandas()
+# Criar SQL Database usando as definições padrões do ambiente.
+spark.sql("CREATE DATABASE dados_covid_spark")
+spark.sql("USE dados_covid_spark")
+```
+
+```python
+# Criar a tabela
+spark.sql("CREATE TABLE dados_covid_spark (regiao STRING, estado STRING, municipio STRING, coduf INT, codmun INT,codRegiaoSaude INT, nomeRegiaoSaude STRING, data DATE, semanaEpi STRING,populacaoTCU2019 INT, casoAcumulado INT, casosNovos INT, obitosAcumulado INT, obitosNovos INT, Recuperadosnovos INT,emAcompanhamentoNovos INT, interior_metropolitana STRING)")
+```
+
+```python
+#spark.catalog.listDatabases()
+```
+
+![](img/DB_SPARK.png)
+
+```python
+#spark.catalog.listTables()
+```
+
+![](img/TABELA_SPARK.png)
+
+```python
+# Estrutura da tabela criada. "Shemma"
+#spark.catalog.listColumns("dados_covid_spark")
+```
+
+![](img/shema.png)
+
+
+**Carga de dados e manipulação. Podemos usar SQL query ou DataFrame API**
+
+```python
+# Estrutura dos dados (Schema) esquema
+esquema = "regiao STRING, estado STRING, municipio STRING, coduf INT, codmun INT,codRegiaoSaude INT, nomeRegiaoSaude STRING, data DATE, semanaEpi STRING,populacaoTCU2019 INT, casoAcumulado INT, casosNovos INT, obitosAcumulado INT, obitosNovos INT, Recuperadosnovos INT,emAcompanhamentoNovos INT, interior_metropolitana STRING"
+```
+
+```python
+# Carregar os dados do hdfs na tabela criada no Spark.
+dados = spark.read.csv("/user/eugenio/dados_covid/", sep=";", schema=esquema, header="false")
+```
+
+```python
+#dados.show(10)
+```
+
+```python
+# Efetivar a carga no SQL Banco de Dados Spark, usando a tabela criada anteriormente. (dados_covid_spark)
+dados.write.saveAsTable("dados_covid_spark_tb", mode="overwrite")
+```
+
+```python
+# Crie as "Queries" a partir da origem dos dados arquivos no hdfs (CSV) com SQL ou DataFrame API.
+dados_spark = spark.sql("SELECT regiao,casoAcumulado, obitosAcumulado, data FROM dados_covid_spark_tb WHERE data ='2021-07-06' ORDER BY casoAcumulado ASC")
+```
+
+```python
+# Agrupando os dados
+dados_spark.groupBy('regiao').max()
+```
+
+![](img/groupby_sql.png)
+
+```python
+
+```
+
+```python
+
 ```
 
 ```python
@@ -627,15 +698,10 @@ dados_hdfs.toPandas()
 
 ```
 
-Pronto!
-
-Chegou o final da jornada, para a instalação e configuração do Apache Hadoop em um container Docker.
+Chegou o final da jornada.
 
 Espero ter contribuido com o seu desenvolvimento de alguma forma.
 
-```python
-
-```
 
 [Carlos Eugênio Moreira de Santana](<https://github.com/carlosemsantana>)
 
